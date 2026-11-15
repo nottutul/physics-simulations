@@ -4,6 +4,8 @@ import {
   MotionDirection,
 } from "@/types/incline-hanging-pulley";
 
+export const FIXED_INCLINE_HEIGHT = 40; // Fixed thickness perpendicular to incline
+
 export function calculateInclineHangingLimits(params: InclineHangingParams) {
   const rad = (params.angle * Math.PI) / 180;
   const triangleH = 310;
@@ -11,27 +13,36 @@ export function calculateInclineHangingLimits(params: InclineHangingParams) {
   const cornerRightX = Math.min(280 + triangleW, 720 - 40);
   const hypotenuseLength = Math.hypot(cornerRightX - 280, triangleH);
 
-  // Dynamic block sizes based on mass (changes with slider)
-  const m1Width = Math.min(108, Math.max(76, 70 + params.m1 * 2.5));
-  const m1Height = Math.min(56, Math.max(38, 34 + params.m1 * 1.5));
-  const m2Width = Math.min(108, Math.max(76, 70 + params.m2 * 2.5));
-  const m2Height = Math.min(56, Math.max(38, 34 + params.m2 * 1.5));
+  // m1 length along incline increases with mass, height is strictly fixed
+  const m1Width = Math.min(116, Math.max(74, 70 + params.m1 * 3.0));
+  const m1Height = FIXED_INCLINE_HEIGHT; // Constant height to keep rope parallel to plane
+
+  // m2 hanging vertically: length (height) increases with mass, width is steady
+  const m2Width = 84;
+  const m2Height = Math.min(72, Math.max(40, 36 + params.m2 * 2.4));
 
   const pxPerMeter = 60;
   const s1_0 = hypotenuseLength * 0.5;
   const Y_m2_0 = 275;
   const baseY = 440;
-  const pulleyRadius = 24;
+  const pulleyRadius = 22;
   const apexY = 130;
+  const apexX = 280;
 
-  // Pulley Center Y formula for collinear rope tangent:
-  const slopeAngle = Math.atan2(triangleH, cornerRightX - 280);
+  // Pulley Center coordinates for parallel rope to top corner:
+  // (C_p - Apex) . uPerp = m1Height - pulleyRadius
+  const slopeAngle = Math.atan2(triangleH, cornerRightX - apexX);
+  const uParX = Math.cos(slopeAngle);
+  const uParY = Math.sin(slopeAngle);
   const uPerpX = Math.sin(slopeAngle);
   const uPerpY = -Math.cos(slopeAngle);
-  const targetPerpDist = m1Height / 2 - pulleyRadius;
+
+  const m2HangingX = apexX - 36;
+  const pulleyCenterX = m2HangingX + pulleyRadius;
+  const targetPerpDist = m1Height - pulleyRadius; // tangent connects to top corner at height = m1Height
   const pulleyCenterY =
     apexY +
-    ((244 + pulleyRadius - 280) * uPerpX - targetPerpDist) / -uPerpY;
+    ((pulleyCenterX - apexX) * uPerpX - targetPerpDist) / -uPerpY;
 
   // Limit 1: m1 moves down incline, m2 moves up towards pulley
   const maxDown_m1 = hypotenuseLength - m1Width / 2 - 20 - s1_0;
@@ -53,14 +64,18 @@ export function calculateInclineHangingLimits(params: InclineHangingParams) {
     hypotenuseLength,
     s1_0,
     Y_m2_0,
+    pulleyCenterX,
     pulleyCenterY,
     pxPerMeter,
     baseY,
     cornerRightX,
     slopeAngle,
+    uParX,
+    uParY,
     uPerpX,
     uPerpY,
     pulleyRadius,
+    m2HangingX,
   };
 }
 
@@ -130,7 +145,6 @@ export function computeInclineHangingStep(
   const staticCalc = calculateStaticInclineHanging(params);
   const { acceleration, motionDirection } = staticCalc;
 
-  // If in equilibrium and at rest, no motion occurs
   if (motionDirection === "equilibrium" && Math.abs(currentState.velocity) < 1e-4) {
     return {
       ...currentState,
@@ -150,7 +164,6 @@ export function computeInclineHangingStep(
   let clampedDisplacement = newDisplacement;
   let clampedVelocity = newVelocity;
 
-  // Check physical collision limits
   if (newDisplacement >= limits.maxDisplacementDown) {
     reachedLimit = true;
     clampedDisplacement = limits.maxDisplacementDown;

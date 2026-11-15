@@ -44,7 +44,7 @@ export function InclineHangingCanvas({
     const textColor = isDark ? "#f8fafc" : "#0f172a";
     const dimTextColor = isDark ? "#94a3b8" : "#64748b";
 
-    // Mass colors (matching controls sliders)
+    // Mass colors
     const m1Color = isDark ? "#2563eb" : "#3b82f6"; // Blue
     const m1Border = isDark ? "#60a5fa" : "#1d4ed8";
     const m2Color = isDark ? "#9333ea" : "#a855f7"; // Purple
@@ -59,7 +59,7 @@ export function InclineHangingCanvas({
     ctx.fillStyle = bgColor;
     ctx.fillRect(0, 0, width, height);
 
-    // Dynamic Geometry & Collision Limits from Physics Engine
+    // Dynamic Geometry & Limits from Physics Engine
     const limits = calculateInclineHangingLimits(params);
     const apexX = 280;
     const apexY = 130;
@@ -67,14 +67,13 @@ export function InclineHangingCanvas({
     const cornerRightX = limits.cornerRightX;
     const slopeAngle = limits.slopeAngle;
 
-    // Unit vectors along and perpendicular to incline
-    const uParX = Math.cos(slopeAngle);
-    const uParY = Math.sin(slopeAngle);
+    const uParX = limits.uParX;
+    const uParY = limits.uParY;
     const uPerpX = limits.uPerpX;
     const uPerpY = limits.uPerpY;
 
-    // Dynamic Block Dimensions based on mass
-    const m1Width = limits.m1Width;
+    // Block Dimensions: length scales with mass, height is constant
+    const m1Length = limits.m1Width;
     const m1Height = limits.m1Height;
     const m2Width = limits.m2Width;
     const m2Height = limits.m2Height;
@@ -82,12 +81,11 @@ export function InclineHangingCanvas({
 
     // Pulley coordinates
     const pulleyRadius = limits.pulleyRadius;
-    const wallClearance = 36;
-    const m2HangingX = apexX - wallClearance;
-    const pulleyCenterX = m2HangingX + pulleyRadius;
+    const m2HangingX = limits.m2HangingX;
+    const pulleyCenterX = limits.pulleyCenterX;
     const pulleyCenterY = limits.pulleyCenterY;
 
-    // Tangent point on pulley for collinear incline rope
+    // Tangent point on pulley: exactly m1Height above incline plane
     const rightTangentX = pulleyCenterX + pulleyRadius * uPerpX;
     const rightTangentY = pulleyCenterY + pulleyRadius * uPerpY;
 
@@ -143,17 +141,20 @@ export function InclineHangingCanvas({
     ctx.stroke();
     ctx.restore();
 
-    // --- 3. Exact Synchronized Motion Positions ---
-    // m1 position along incline:
+    // --- 3. Compute Block Positions ---
     const m1Dist = limits.s1_0 + state.displacement * limits.pxPerMeter;
+
+    // Center of block m1 in world coordinates:
     const m1CenterX = apexX + m1Dist * uParX + (m1Height / 2) * uPerpX;
     const m1CenterY = apexY + m1Dist * uParY + (m1Height / 2) * uPerpY;
 
-    // Uphill face center of m1 (rope attachment point):
-    const m1FaceX = m1CenterX - (m1Width / 2) * uParX;
-    const m1FaceY = m1CenterY - (m1Width / 2) * uParY;
+    // TOP CORNER of m1 facing the pulley (where rope connects):
+    const m1TopCornerX =
+      apexX + (m1Dist - m1Length / 2) * uParX + m1Height * uPerpX;
+    const m1TopCornerY =
+      apexY + (m1Dist - m1Length / 2) * uParY + m1Height * uPerpY;
 
-    // m2 vertical hanging position (strictly synchronized with m1 displacement):
+    // m2 vertical hanging position:
     const m2Y = limits.Y_m2_0 - state.displacement * limits.pxPerMeter;
     const m2Top = m2Y - m2Height / 2;
 
@@ -163,7 +164,7 @@ export function InclineHangingCanvas({
     ctx.lineWidth = 3;
     ctx.lineCap = "round";
 
-    // Left vertical rope: exactly from pulley tangent to m2Top
+    // Left vertical rope: from pulley left tangent to top center of m2
     ctx.beginPath();
     ctx.moveTo(m2HangingX, pulleyCenterY);
     ctx.lineTo(m2HangingX, m2Top);
@@ -181,10 +182,11 @@ export function InclineHangingCanvas({
     );
     ctx.stroke();
 
-    // Incline rope: perfectly straight collinear segment to m1 uphill face
+    // Incline rope: straight line from rightTangent to the TOP CORNER of m1
+    // (100% strictly parallel to the incline plane at all times)
     ctx.beginPath();
     ctx.moveTo(rightTangentX, rightTangentY);
-    ctx.lineTo(m1FaceX, m1FaceY);
+    ctx.lineTo(m1TopCornerX, m1TopCornerY);
     ctx.stroke();
     ctx.restore();
 
@@ -239,7 +241,7 @@ export function InclineHangingCanvas({
     ctx.fill();
     ctx.stroke();
 
-    // Text inside block m2: "m₂ = X kg" (Font scales slightly if needed)
+    // Text inside block m2: "m₂ = X kg"
     ctx.font = "bold 13px 'Google Sans', sans-serif";
     ctx.fillStyle = "#ffffff";
     ctx.textAlign = "center";
@@ -257,9 +259,9 @@ export function InclineHangingCanvas({
     ctx.lineWidth = 2.5;
     ctx.beginPath();
     ctx.roundRect(
-      -m1Width / 2,
+      -m1Length / 2,
       -m1Height / 2,
-      m1Width,
+      m1Length,
       m1Height,
       cornerRadius
     );
@@ -274,7 +276,7 @@ export function InclineHangingCanvas({
     ctx.fillText(`m₁ = ${params.m1} kg`, 0, 0);
     ctx.restore();
 
-    // --- 8. Force Vectors (Only when showVectors is true) ---
+    // --- 8. Force Vectors (when showVectors is true) ---
     if (showVectors) {
       const drawArrow = (
         fromX: number,
@@ -363,20 +365,20 @@ export function InclineHangingCanvas({
       );
 
       // m1 Vectors:
-      // Tension T pointing UP the incline along the rope
+      // Tension T pointing UP the incline from the top corner along the rope
       const m1TArrowLen = 38;
       drawArrow(
-        m1FaceX,
-        m1FaceY,
-        m1FaceX - m1TArrowLen * uParX,
-        m1FaceY - m1TArrowLen * uParY,
+        m1TopCornerX,
+        m1TopCornerY,
+        m1TopCornerX - m1TArrowLen * uParX,
+        m1TopCornerY - m1TArrowLen * uParY,
         tensionColor,
         "T",
         "side",
         -14
       );
 
-      // Normal force N: perpendicular to incline pointing away from slope
+      // Normal force N: perpendicular to incline from top surface
       const m1NArrowLen = 42;
       const nFromX = m1CenterX + (m1Height / 2) * uPerpX;
       const nFromY = m1CenterY + (m1Height / 2) * uPerpY;

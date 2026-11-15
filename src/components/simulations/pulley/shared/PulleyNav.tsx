@@ -21,6 +21,13 @@ const pulleyModels: PulleyModelInfo[] = [
     status: "active",
   },
   {
+    id: "double-incline",
+    title: "দ্বিমুখী নততল কপিকল",
+    subtitle: "Double Incline (45° & 60°)",
+    href: "/simulations/pulley/double-incline",
+    status: "active",
+  },
+  {
     id: "double-hanging",
     title: "দ্বৈত কপিকল (৩-ভর ব্যবস্থা)",
     subtitle: "Double Pulley with 3 Masses",
