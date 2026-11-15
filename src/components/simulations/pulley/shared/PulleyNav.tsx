@@ -38,8 +38,8 @@ const pulleyModels: PulleyModelInfo[] = [
     id: "atwood",
     title: "অ্যাটউড মেশিন",
     subtitle: "Atwood Machine",
-    href: "#",
-    status: "coming_soon",
+    href: "/simulations/pulley/atwood",
+    status: "active",
   },
   {
     id: "block-and-tackle",
