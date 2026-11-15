@@ -14,6 +14,13 @@ const pulleyModels: PulleyModelInfo[] = [
     status: "active",
   },
   {
+    id: "incline-hanging",
+    title: "নততল ও ঝুলন্ত ব্লক",
+    subtitle: "Incline & Hanging Mass",
+    href: "/simulations/pulley/incline-hanging",
+    status: "active",
+  },
+  {
     id: "double-hanging",
     title: "দ্বৈত কপিকল (৩-ভর ব্যবস্থা)",
     subtitle: "Double Pulley with 3 Masses",
