@@ -32,7 +32,6 @@ export function HeroSection() {
             type="text"
             placeholder="সিমুলেশন খুঁজুন..."
             className="w-full bg-transparent text-sm focus:outline-none text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400"
-            readOnly
           />
         </div>
 
