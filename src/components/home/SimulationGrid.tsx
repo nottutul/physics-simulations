@@ -4,6 +4,17 @@ import { SimulationCard } from "./SimulationCard";
 
 const simulations: Simulation[] = [
   {
+    id: "relative-velocity",
+    title: "আপেক্ষিক বেগ (বাস ও বৃষ্টি)",
+    subtitle: "Relative Velocity: Bus, Wind & Rain",
+    category: "গতিবিদ্যা (Kinematics)",
+    description:
+      "চলমান বাস, বাতাস ও বৃষ্টির আপেক্ষিক গতিবেগ, ভেক্টর ডায়াগ্রাম এবং কোন পাশের কাচ ভিজবে তার বাস্তবসম্মত সিমুলেশন।",
+    href: "/simulations/relative-velocity",
+    status: "active",
+    badge: "নতুন",
+  },
+  {
     id: "pulley",
     title: "কপিকল",
     subtitle: "Pulley System Simulation",
