@@ -55,13 +55,13 @@ export function RelativeVelocityCanvas({
   // Initialize rain particles
   useEffect(() => {
     const drops: RainDrop[] = [];
-    const count = 220;
+    const count = 280;
     for (let i = 0; i < count; i++) {
       drops.push({
-        x: Math.random() * 1000,
+        x: Math.random() * 1200 - 150,
         y: Math.random() * 600,
-        length: 12 + Math.random() * 14,
-        speedMultiplier: 0.85 + Math.random() * 0.35,
+        length: 10 + Math.random() * 14,
+        speedMultiplier: 0.85 + Math.random() * 0.3,
         opacity: 0.35 + Math.random() * 0.55,
       });
     }
@@ -440,13 +440,27 @@ export function RelativeVelocityCanvas({
             drop.x += rainVx * drop.speedMultiplier * dt;
             drop.y += rainVy * drop.speedMultiplier * dt;
 
-            // Wrap around horizontal
-            if (drop.x > width + 60) drop.x = -50;
-            if (drop.x < -60) drop.x = width + 50;
+            // Horizontal wrap-around for slanted rain
+            if (rainVx > 5 && drop.x > width + 100) {
+              drop.x = -60 - Math.random() * 40;
+              drop.y = Math.random() * (roadY - 30);
+            } else if (rainVx < -5 && drop.x < -100) {
+              drop.x = width + 60 + Math.random() * 40;
+              drop.y = Math.random() * (roadY - 30);
+            }
 
-            // Wrap around vertical
+            // Helper to respawn drop uniformly across the full scene width
+            const respawnDrop = () => {
+              drop.y = -15 - Math.random() * 35;
+              const slantBuffer = Math.max(100, Math.abs(rainVx) * 2.5);
+              drop.x = -slantBuffer + Math.random() * (width + slantBuffer * 2);
+              drop.length = 10 + Math.random() * 14;
+              drop.speedMultiplier = 0.85 + Math.random() * 0.3;
+              drop.opacity = 0.35 + Math.random() * 0.55;
+            };
+
+            // Road collision
             if (drop.y > roadY) {
-              // Road splash
               if (Math.random() < 0.25) {
                 anim.splashes.push({
                   x: drop.x,
@@ -458,13 +472,11 @@ export function RelativeVelocityCanvas({
                   color: "rgba(186, 230, 253, 0.6)",
                 });
               }
-              drop.y = -20 - Math.random() * 30;
-              drop.x = Math.random() * (width + 100) - 50;
+              respawnDrop();
             }
 
-            // Check collision with bus
             // 1) Roof collision
-            if (
+            else if (
               drop.x >= curBusX + 5 &&
               drop.x <= curBusX + busWidth - 5 &&
               drop.y >= curBusY &&
@@ -481,11 +493,11 @@ export function RelativeVelocityCanvas({
                   color: "rgba(186, 230, 253, 0.7)",
                 });
               }
-              drop.y = -20;
+              respawnDrop();
             }
 
             // 2) Front Windshield collision (if front glass is wet)
-            if (currentCalcs.frontGlassWet) {
+            else if (currentCalcs.frontGlassWet) {
               const frontWindshieldX = frontIsRight
                 ? curBusX + busWidth - clampedSlant / 2
                 : curBusX + clampedSlant / 2;
@@ -503,12 +515,12 @@ export function RelativeVelocityCanvas({
                   maxLife: 0.25,
                   color: "rgba(56, 189, 248, 0.9)",
                 });
-                drop.y = -20;
+                respawnDrop();
               }
             }
 
             // 3) Rear Windshield collision (if rear glass is wet)
-            if (currentCalcs.rearGlassWet) {
+            else if (currentCalcs.rearGlassWet) {
               const rearWindshieldX = frontIsRight
                 ? curBusX + 6
                 : curBusX + busWidth - 6;
@@ -526,7 +538,7 @@ export function RelativeVelocityCanvas({
                   maxLife: 0.25,
                   color: "rgba(249, 115, 22, 0.9)",
                 });
-                drop.y = -20;
+                respawnDrop();
               }
             }
           }
