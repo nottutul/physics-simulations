@@ -137,10 +137,11 @@ export function RelativeVelocityCanvas({
       // Rain velocity components in pixels/sec
       // In bus frame: horizontal = v_rel_x, vertical = v_R
       // In ground frame: horizontal = v_ground_x, vertical = v_R
-      const pxPerMs = 18; // visual scale factor
+      // Smooth, gentle velocity scale preserving exact physical angle θ:
+      const rainScale = 14;
       const rainVx =
-        (isBusFrame ? currentCalcs.v_rel_x : currentCalcs.v_ground_x) * pxPerMs;
-      const rainVy = currentCalcs.v_R * pxPerMs * 1.8;
+        (isBusFrame ? currentCalcs.v_rel_x : currentCalcs.v_ground_x) * rainScale;
+      const rainVy = currentCalcs.v_R * rainScale;
 
       // --- 1. Background Sky & Atmosphere ---
       const skyGrad = ctx.createLinearGradient(0, 0, 0, height);

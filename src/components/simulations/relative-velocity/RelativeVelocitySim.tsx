@@ -19,14 +19,14 @@ export function RelativeVelocitySim() {
     busDirection: "right",
     windSpeed: 10.0,
     windDirection: "right",
-    rainSpeed: 7.1,
+    rainSpeed: 10.0,
     windshieldAngle: 30, // Constant aerodynamic windshield tilt
     frame: "bus", // Default to bus frame to immediately show relative velocity effect
     showRainDrops: true,
     showResultantVector: true,
-    showVectorValues: true,
+    showVectorValues: false,
     showParallelogram: true,
-    showGrid: false,
+    showGrid: true,
     showCalculations: true,
   });
 
@@ -54,14 +54,14 @@ export function RelativeVelocitySim() {
       busDirection: "right",
       windSpeed: 10.0,
       windDirection: "right",
-      rainSpeed: 7.1,
+      rainSpeed: 10.0,
       windshieldAngle: 30,
       frame: "bus",
       showRainDrops: true,
       showResultantVector: true,
-      showVectorValues: true,
+      showVectorValues: false,
       showParallelogram: true,
-      showGrid: false,
+      showGrid: true,
       showCalculations: true,
     });
     setIsRunning(true);
@@ -84,7 +84,6 @@ export function RelativeVelocitySim() {
           <VectorDiagram
             params={params}
             calcs={calcs}
-            onChangeParams={handleChangeParams}
           />
 
           {/* 3. Glass Wetting Status (then Glass Wetting Status) */}

@@ -362,7 +362,7 @@ export function RelativeVelocityControls({
                 busDirection: "right",
                 windSpeed: 0,
                 windDirection: "right",
-                rainSpeed: 7.1,
+                rainSpeed: 10,
                 frame: "bus",
               })
             }
@@ -378,7 +378,7 @@ export function RelativeVelocityControls({
                 busDirection: "right",
                 windSpeed: 20,
                 windDirection: "right",
-                rainSpeed: 7.1,
+                rainSpeed: 10,
                 frame: "bus",
               })
             }
@@ -394,7 +394,7 @@ export function RelativeVelocityControls({
                 busDirection: "right",
                 windSpeed: 10,
                 windDirection: "right",
-                rainSpeed: 7.1,
+                rainSpeed: 10,
                 frame: "bus",
               })
             }
@@ -410,7 +410,7 @@ export function RelativeVelocityControls({
                 busDirection: "right",
                 windSpeed: 10,
                 windDirection: "left",
-                rainSpeed: 7.1,
+                rainSpeed: 10,
                 frame: "bus",
               })
             }

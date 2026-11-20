@@ -1,30 +1,23 @@
 "use client";
 
-import React, { useRef, useState, useCallback } from "react";
+import React from "react";
 import {
   RelativeVelocityParams,
   RelativeVelocityCalculations,
 } from "@/types/relative-velocity";
-import { Compass, Move, ArrowRightLeft } from "lucide-react";
+import { Compass, ArrowRightLeft } from "lucide-react";
 
 interface VectorDiagramProps {
   params: RelativeVelocityParams;
   calcs: RelativeVelocityCalculations;
-  onChangeParams: (newParams: Partial<RelativeVelocityParams>) => void;
   className?: string;
 }
 
 export function VectorDiagram({
   params,
   calcs,
-  onChangeParams,
   className = "",
 }: VectorDiagramProps) {
-  const svgRef = useRef<SVGSVGElement | null>(null);
-  const [activeDrag, setActiveDrag] = useState<
-    "horizontal" | "vertical" | "bus" | null
-  >(null);
-
   // SVG coordinate dimensions
   const width = 480;
   const height = 310;
@@ -69,61 +62,6 @@ export function VectorDiagram({
   const resPixX = originX + horizVal * scale;
   const resPixY = originY + vertVal * scale;
 
-  // Drag interaction
-  const handlePointerDown = (type: "horizontal" | "vertical" | "bus") => (
-    e: React.PointerEvent
-  ) => {
-    e.preventDefault();
-    setActiveDrag(type);
-    (e.target as Element).setPointerCapture(e.pointerId);
-  };
-
-  const handlePointerMove = useCallback(
-    (e: React.PointerEvent) => {
-      if (!activeDrag || !svgRef.current) return;
-      const rect = svgRef.current.getBoundingClientRect();
-      const clientX = e.clientX - rect.left;
-      const clientY = e.clientY - rect.top;
-
-      const svgX = (clientX / rect.width) * width;
-      const svgY = (clientY / rect.height) * height;
-
-      if (activeDrag === "horizontal") {
-        const dx = svgX - originX;
-        const newSpeed = Math.round((Math.abs(dx) / scale) * 10) / 10;
-        const clampedSpeed = Math.max(0, Math.min(30, newSpeed));
-        const newDir = dx >= 0 ? "right" : "left";
-        onChangeParams({ windSpeed: clampedSpeed, windDirection: newDir });
-      } else if (activeDrag === "bus") {
-        const dx = svgX - originX;
-        const newSpeed = Math.round((Math.abs(dx) / scale) * 10) / 10;
-        const clampedSpeed = Math.max(0, Math.min(35, newSpeed));
-        const newDir = dx >= 0 ? "left" : "right";
-        onChangeParams({ busSpeed: clampedSpeed, busDirection: newDir });
-      } else if (activeDrag === "vertical") {
-        const dy = svgY - originY;
-        const newRainSpeed = Math.round((Math.max(10, dy) / scale) * 10) / 10;
-        const clampedRain = Math.max(1, Math.min(25, newRainSpeed));
-        onChangeParams({ rainSpeed: clampedRain });
-      }
-    },
-    [activeDrag, originX, originY, scale, onChangeParams]
-  );
-
-  const handlePointerUp = useCallback(
-    (e: React.PointerEvent) => {
-      if (activeDrag) {
-        setActiveDrag(null);
-        try {
-          (e.target as Element).releasePointerCapture(e.pointerId);
-        } catch {
-          // ignore
-        }
-      }
-    },
-    [activeDrag]
-  );
-
   // Angle theta arc
   const angleDeg = isBusFrame
     ? calcs.v_rel_angle_deg
@@ -148,14 +86,13 @@ export function VectorDiagram({
       {/* Box Header */}
       <div className="flex items-center justify-between border-b border-zinc-800 pb-2.5 mb-2.5">
         <div className="flex items-center gap-2">
-          <Compass className="w-4 h-4 text-amber-400 animate-spin-slow" />
+          <Compass className="w-4 h-4 text-amber-400" />
           <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-200">
             ভেক্টর ডায়াগ্রাম (Vector Diagram)
           </h4>
         </div>
         <div className="flex items-center gap-1.5 text-[11px] text-zinc-400">
-          <Move className="w-3 h-3 text-amber-400" />
-          <span>তীরের গোল মাথা টেনে মান পরিবর্তন করা যায়</span>
+          <span>ভেক্টর রেখাচিত্র (Vector Geometry)</span>
         </div>
       </div>
 
@@ -176,16 +113,12 @@ export function VectorDiagram({
       {/* SVG Canvas for Vector Diagram */}
       <div className="relative w-full aspect-[480/310] bg-zinc-950 rounded-xl overflow-hidden shadow-inner border border-zinc-800/80 flex items-center justify-center">
         <svg
-          ref={svgRef}
           viewBox={`0 0 ${width} ${height}`}
-          className="w-full h-full cursor-crosshair"
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          onPointerCancel={handlePointerUp}
+          className="w-full h-full"
         >
           <defs>
             {/* Arrow markers */}
-            {/* 1. Yellow for vertical rain v_R */}
+            {/* 1. Yellow for vertical rain Vr */}
             <marker
               id="arrow-vert"
               viewBox="0 0 10 10"
@@ -198,7 +131,7 @@ export function VectorDiagram({
               <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#eab308" />
             </marker>
 
-            {/* 2. Orange for wind v_W */}
+            {/* 2. Orange for wind Vw */}
             <marker
               id="arrow-wind"
               viewBox="0 0 10 10"
@@ -211,7 +144,7 @@ export function VectorDiagram({
               <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#f97316" />
             </marker>
 
-            {/* 3. Cyan for subtracted bus velocity -v_B */}
+            {/* 3. Cyan for subtracted bus velocity -Vb */}
             <marker
               id="arrow-neg-bus"
               viewBox="0 0 10 10"
@@ -224,7 +157,7 @@ export function VectorDiagram({
               <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#06b6d4" />
             </marker>
 
-            {/* 4. Faint blue for original bus velocity v_B */}
+            {/* 4. Faint blue for original bus velocity Vb */}
             <marker
               id="arrow-orig-bus"
               viewBox="0 0 10 10"
@@ -237,7 +170,7 @@ export function VectorDiagram({
               <path d="M 0 1.5 L 9 5 L 0 8.5 z" fill="#60a5fa" />
             </marker>
 
-            {/* 5. Violet for resultant v_RB */}
+            {/* 5. Violet for resultant Vrb */}
             <marker
               id="arrow-res"
               viewBox="0 0 10 10"
@@ -365,12 +298,10 @@ export function VectorDiagram({
           <circle
             cx={vPixX}
             cy={vPixY}
-            r="7"
+            r="5"
             fill="#eab308"
             stroke="#ffffff"
-            strokeWidth="2"
-            className="cursor-ns-resize hover:scale-125 transition-transform"
-            onPointerDown={handlePointerDown("vertical")}
+            strokeWidth="1.5"
           />
           <text
             x={vPixX - 10}
@@ -408,7 +339,9 @@ export function VectorDiagram({
                 textAnchor={busPixX > originX ? "start" : "end"}
               >
                 V<tspan dy="2.5" fontSize="8">b</tspan>
-                <tspan dy="-2.5"> (বাসের মূল গতি: {busSpeed.toFixed(1)} m/s)</tspan>
+                <tspan dy="-2.5">
+                  {params.showVectorValues ? ` (${busSpeed.toFixed(1)} m/s)` : ""}
+                </tspan>
               </text>
 
               {/* Reversed Subtracted Bus Velocity Vector -Vb (solid cyan arrow) */}
@@ -424,12 +357,10 @@ export function VectorDiagram({
               <circle
                 cx={negBusPixX}
                 cy={negBusPixY}
-                r="7"
+                r="5"
                 fill="#06b6d4"
                 stroke="#ffffff"
-                strokeWidth="2"
-                className="cursor-ew-resize hover:scale-125 transition-transform"
-                onPointerDown={handlePointerDown("bus")}
+                strokeWidth="1.5"
               />
               <text
                 x={negBusPixX > originX ? negBusPixX + 8 : negBusPixX - 8}
@@ -460,12 +391,10 @@ export function VectorDiagram({
               <circle
                 cx={windPixX}
                 cy={windPixY}
-                r="6.5"
+                r="5"
                 fill="#f97316"
                 stroke="#ffffff"
-                strokeWidth="2"
-                className="cursor-ew-resize hover:scale-125 transition-transform"
-                onPointerDown={handlePointerDown("horizontal")}
+                strokeWidth="1.5"
               />
               <text
                 x={windPixX > originX ? windPixX + 8 : windPixX - 8}
@@ -476,7 +405,9 @@ export function VectorDiagram({
                 textAnchor={windPixX > originX ? "start" : "end"}
               >
                 V<tspan dy="3" fontSize="9">w</tspan>
-                <tspan dy="-3"> (বাতাস: {params.windSpeed.toFixed(1)} m/s)</tspan>
+                <tspan dy="-3">
+                  {params.showVectorValues ? ` (${params.windSpeed.toFixed(1)} m/s)` : ""}
+                </tspan>
               </text>
             </g>
           )}
